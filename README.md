@@ -1,4 +1,4 @@
-# 🚀 PROJECT_INSIDENTHUB
+# 🚀 PROJECT_INCIDENTHUB
 
 API REST desarrollada con **Express** y **TypeScript** para la gestión de incidentes tecnológicos en una organización.
 
