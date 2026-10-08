@@ -1,4 +1,4 @@
-# 🚀 IncidentHub API v1.0
+# 🚀 PROJECT_INSIDENTHUB
 
 API REST desarrollada con **Express** y **TypeScript** para la gestión de incidentes tecnológicos en una organización.
 
@@ -21,7 +21,7 @@ API REST desarrollada con **Express** y **TypeScript** para la gestión de incid
 
 ```bash
 # 1. Clonar o descomprimir el proyecto
-cd incidenthub-api
+cd PROJECT_INCIDENTHUB
 
 # 2. Instalar dependencias
 npm install
