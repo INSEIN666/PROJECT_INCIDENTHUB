@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IncidentHub API — Cliente de Pruebas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f1a;
+      --surface: #141726;
+      --surface2: #1c2035;
+      --border: #2a2f4a;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --danger: #ff4d6d;
+      --warning: #ffb347;
+      --success: #3ddc84;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ───────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #1a1d35 0%, #0d0f1a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .logo {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px rgba(108,99,255,0.4);
+    }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
+    header span { font-size: 0.75rem; color: var(--muted); margin-left: 6px; }
+
+    .auth-badge {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .role-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .role-select:focus { outline: none; border-color: var(--accent); }
+    .key-display {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--accent2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .key-dot { width: 8px; height: 8px; background: var(--accent2); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Layout ───────────────────────────── */
+    main {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 0;
+      flex: 1;
+    }
+
+    /* ── Sidebar ──────────────────────────── */
+    aside {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      overflow-y: auto;
+      height: calc(100vh - 83px);
+      position: sticky;
+      top: 83px;
+    }
+    .sidebar-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0 20px 12px;
+    }
+
+    .endpoint-btn {
+      width: 100%;
+      text-align: left;
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+    }
+    .endpoint-btn:hover { background: var(--surface2); }
+    .endpoint-btn.active { background: rgba(108,99,255,0.15); border-left: 3px solid var(--accent); }
+
+    .method-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 5px;
+      min-width: 52px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .GET    { background: rgba(61,220,132,0.15); color: #3ddc84; }
+    .POST   { background: rgba(108,99,255,0.2);  color: #9b8fff; }
+    .PUT    { background: rgba(255,179,71,0.15); color: #ffb347; }
+    .PATCH  { background: rgba(0,212,170,0.15);  color: #00d4aa; }
+    .DELETE { background: rgba(255,77,109,0.15); color: #ff4d6d; }
+
+    /* ── Content ──────────────────────────── */
+    section {
+      padding: 28px 32px;
+      overflow-y: auto;
+      height: calc(100vh - 83px);
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-desc {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 16px;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+    }
+    textarea { resize: vertical; min-height: 180px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 25px rgba(108,99,255,0.45); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Response area ────────────────────── */
+    .response-wrap {
+      margin-top: 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .response-header {
+      background: var(--surface2);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    .status-pill {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+    .status-2xx { background: rgba(61,220,132,0.15); color: #3ddc84; }
+    .status-4xx { background: rgba(255,179,71,0.15); color: #ffb347; }
+    .status-5xx { background: rgba(255,77,109,0.15); color: #ff4d6d; }
+
+    .response-body {
+      background: #0a0c14;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      max-height: 420px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+    .response-empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* JSON coloring */
+    .json-key    { color: #9b8fff; }
+    .json-str    { color: #3ddc84; }
+    .json-num    { color: #ffb347; }
+    .json-bool   { color: #00d4aa; }
+    .json-null   { color: #ff4d6d; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🛡️</div>
+  <div>
+    <h1>IncidentHub API <span>v1.0</span></h1>
+  </div>
+  <div class="auth-badge">
+    <select class="role-select" id="roleSelect" onchange="updateKey()">
+      <option value="hub-user-2026">👤 Usuario (USER)</option>
+      <option value="hub-admin-2026">🔑 Administrador (ADMIN)</option>
+    </select>
+    <div class="key-display">
+      <div class="key-dot"></div>
+      <span id="keyDisplay">hub-user-2026</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-title">Endpoints</div>
+
+    <button class="endpoint-btn active" onclick="showPanel('getAll')">
+      <span class="method-badge GET">GET</span>
+      <span>/api/incidents</span>
+    </button>
+    <button class="endpoint-btn" onclick="showPanel('getOne')">
+      <span class="method-badge GET">GET</span>
+      <span>/api/incidents/:id</span>
+    </button>
+    <button class="endpoint-btn" onclick="showPanel('create')">
+      <span class="method-badge POST">POST</span>
+      <span>/api/incidents</span>
+    </button>
+    <button class="endpoint-btn" onclick="showPanel('update')">
+      <span class="method-badge PUT">PUT</span>
+      <span>/api/incidents/:id</span>
+    </button>
+    <button class="endpoint-btn" onclick="showPanel('status')">
+      <span class="method-badge PATCH">PATCH</span>
+      <span>/api/incidents/:id/status</span>
+    </button>
+    <button class="endpoint-btn" onclick="showPanel('remove')">
+      <span class="method-badge DELETE">DELETE</span>
+      <span>/api/incidents/:id</span>
+    </button>
+  </aside>
+
+  <!-- Panels -->
+  <section>
+
+    <!-- GET ALL -->
+    <div id="panel-getAll">
+      <div class="panel-title"><span class="method-badge GET">GET</span> Listar todos los incidentes</div>
+      <p class="panel-desc">Retorna todos los incidentes registrados. Soporta filtros opcionales por prioridad y estado.</p>
+      <label>Filtro por Priority (opcional)</label>
+      <select id="filterPriority">
+        <option value="">— Sin filtro —</option>
+        <option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option>
+      </select>
+      <label>Filtro por Status (opcional)</label>
+      <select id="filterStatus">
+        <option value="">— Sin filtro —</option>
+        <option>OPEN</option><option>IN_PROGRESS</option><option>RESOLVED</option>
+      </select>
+      <button class="btn btn-primary" onclick="getAllIncidents()">
+        <span>▶ Enviar petición</span>
+      </button>
+      <div id="res-getAll" class="response-wrap"><div class="response-empty">Presiona "Enviar petición" para ver la respuesta</div></div>
+    </div>
+
+    <!-- GET ONE -->
+    <div id="panel-getOne" style="display:none">
+      <div class="panel-title"><span class="method-badge GET">GET</span> Obtener incidente por ID</div>
+      <p class="panel-desc">Retorna el detalle de un incidente específico. Responde 404 si no existe.</p>
+      <label>ID del incidente</label>
+      <input type="number" id="getOneId" value="1" min="1" />
+      <button class="btn btn-primary" onclick="getOneIncident()">
+        <span>▶ Enviar petición</span>
+      </button>
+      <div id="res-getOne" class="response-wrap"><div class="response-empty">Presiona "Enviar petición" para ver la respuesta</div></div>
+    </div>
+
+    <!-- CREATE -->
+    <div id="panel-create" style="display:none">
+      <div class="panel-title"><span class="method-badge POST">POST</span> Registrar nuevo incidente</div>
+      <p class="panel-desc">Crea un incidente. El servidor genera automáticamente: id, status (OPEN) y createdAt.</p>
+      <div class="grid-2">
+        <div>
+          <label>Título *</label>
+          <input type="text" id="cTitle" value="Monitor sin imagen" />
+        </div>
+        <div>
+          <label>Reportante *</label>
+          <input type="text" id="cReporter" value="Ana Martínez" />
+        </div>
+      </div>
+      <label>Descripción *</label>
+      <input type="text" id="cDescription" value="El monitor del puesto 7 no muestra imagen al encender el equipo." />
+      <div class="grid-2">
+        <div>
+          <label>Ubicación *</label>
+          <input type="text" id="cLocation" value="Sala de Desarrollo" />
+        </div>
+        <div>
+          <label>Tiempo estimado (minutos) *</label>
+          <input type="number" id="cMinutes" value="30" min="1" max="480" />
+        </div>
+      </div>
+      <label>Prioridad *</label>
+      <select id="cPriority">
+        <option>LOW</option><option>MEDIUM</option><option selected>HIGH</option><option>CRITICAL</option>
+      </select>
+      <button class="btn btn-primary" onclick="createIncident()">
+        <span>▶ Enviar petición</span>
+      </button>
+      <div id="res-create" class="response-wrap"><div class="response-empty">Presiona "Enviar petición" para ver la respuesta</div></div>
+    </div>
+
+    <!-- UPDATE -->
+    <div id="panel-update" style="display:none">
+      <div class="panel-title"><span class="method-badge PUT">PUT</span> Actualizar incidente</div>
+      <p class="panel-desc">Actualiza los datos de un incidente existente. Preserva id, status y createdAt.</p>
+      <label>ID del incidente *</label>
+      <input type="number" id="uId" value="1" min="1" />
+      <div class="grid-2">
+        <div>
+          <label>Título *</label>
+          <input type="text" id="uTitle" value="Proyector sin señal HDMI" />
+        </div>
+        <div>
+          <label>Reportante *</label>
+          <input type="text" id="uReporter" value="Carlos Díaz" />
+        </div>
+      </div>
+      <label>Descripción *</label>
+      <input type="text" id="uDescription" value="El proyector del aula no detecta señal por ningún puerto disponible." />
+      <div class="grid-2">
+        <div>
+          <label>Ubicación *</label>
+          <input type="text" id="uLocation" value="Aula 201" />
+        </div>
+        <div>
+          <label>Tiempo estimado (min) *</label>
+          <input type="number" id="uMinutes" value="45" min="1" max="480" />
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Prioridad *</label>
+          <select id="uPriority">
+            <option>LOW</option><option>MEDIUM</option><option selected>HIGH</option><option>CRITICAL</option>
+          </select>
+        </div>
+        <div>
+          <label>Asignado a (opcional)</label>
+          <input type="text" id="uAssigned" value="Soporte AV" />
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="updateIncident()">
+        <span>▶ Enviar petición</span>
+      </button>
+      <div id="res-update" class="response-wrap"><div class="response-empty">Presiona "Enviar petición" para ver la respuesta</div></div>
+    </div>
+
+    <!-- PATCH STATUS -->
+    <div id="panel-status" style="display:none">
+      <div class="panel-title"><span class="method-badge PATCH">PATCH</span> Cambiar estado</div>
+      <p class="panel-desc">Actualiza el estado de un incidente. Transiciones permitidas: OPEN→IN_PROGRESS, IN_PROGRESS→RESOLVED/OPEN, RESOLVED→OPEN.</p>
+      <label>ID del incidente *</label>
+      <input type="number" id="sId" value="1" min="1" />
+      <label>Nuevo estado *</label>
+      <select id="sStatus">
+        <option>OPEN</option><option selected>IN_PROGRESS</option><option>RESOLVED</option>
+      </select>
+      <button class="btn btn-primary" onclick="patchStatus()">
+        <span>▶ Enviar petición</span>
+      </button>
+      <div id="res-status" class="response-wrap"><div class="response-empty">Presiona "Enviar petición" para ver la respuesta</div></div>
+    </div>
+
+    <!-- DELETE -->
+    <div id="panel-remove" style="display:none">
+      <div class="panel-title"><span class="method-badge DELETE">DELETE</span> Eliminar incidente</div>
+      <p class="panel-desc">Elimina un incidente permanentemente. ⚠️ Requiere rol <strong>ADMIN</strong> — selecciónalo arriba para evitar error 403.</p>
+      <label>ID del incidente *</label>
+      <input type="number" id="dId" value="1" min="1" />
+      <button class="btn btn-primary" style="background:linear-gradient(135deg,#ff4d6d,#c0392b);box-shadow:0 4px 20px rgba(255,77,109,0.3)" onclick="deleteIncident()">
+        <span>🗑️ Eliminar incidente</span>
+      </button>
+      <div id="res-remove" class="response-wrap"><div class="response-empty">Presiona "Eliminar" para ver la respuesta</div></div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  const BASE = 'http://localhost:3000/api/incidents';
+  let apiKey = 'hub-user-2026';
+
+  function updateKey() {
+    apiKey = document.getElementById('roleSelect').value;
+    document.getElementById('keyDisplay').textContent = apiKey;
+  }
+
+  function headers(hasBody = false) {
+    const h = { 'x-api-key': apiKey };
+    if (hasBody) h['Content-Type'] = 'application/json';
+    return h;
+  }
+
+  function showPanel(name) {
+    document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
+    document.getElementById(`panel-${name}`).style.display = 'block';
+    document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+
+  function colorizeJson(obj) {
+    const json = JSON.stringify(obj, null, 2);
+    return json
+      .replace(/("[\w@\-]+")\s*:/g, '<span class="json-key">$1</span>:')
+      .replace(/:\s*(".*?")/g, ': <span class="json-str">$1</span>')
+      .replace(/:\s*(\d+\.?\d*)/g, ': <span class="json-num">$1</span>')
+      .replace(/:\s*(true|false)/g, ': <span class="json-bool">$1</span>')
+      .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
+  }
+
+  function renderResponse(containerId, status, data) {
+    const wrap = document.getElementById(containerId);
+    const cls = status >= 500 ? 'status-5xx' : status >= 400 ? 'status-4xx' : 'status-2xx';
+    let body = '';
+    if (data === null) {
+      body = `<div class="response-empty">✅ ${status} No Content — operación exitosa</div>`;
+    } else {
+      body = `<div class="response-body">${colorizeJson(data)}</div>`;
+    }
+    wrap.innerHTML = `
+      <div class="response-header">
+        <span class="status-pill ${cls}">${status}</span>
+        <span style="color:var(--muted);font-size:0.78rem">Respuesta del servidor</span>
+      </div>
+      ${body}
+    `;
+  }
+
+  async function doFetch(url, options) {
+    const res = await fetch(url, options);
+    const status = res.status;
+    let data = null;
+    if (status !== 204) {
+      try { data = await res.json(); } catch(_) { data = { raw: await res.text() }; }
+    }
+    return { status, data };
+  }
+
+  async function getAllIncidents() {
+    const priority = document.getElementById('filterPriority').value;
+    const status   = document.getElementById('filterStatus').value;
+    let url = BASE;
+    const params = [];
+    if (priority) params.push(`priority=${priority}`);
+    if (status)   params.push(`status=${status}`);
+    if (params.length) url += '?' + params.join('&');
+    const { status: s, data } = await doFetch(url, { headers: headers() });
+    renderResponse('res-getAll', s, data);
+  }
+
+  async function getOneIncident() {
+    const id = document.getElementById('getOneId').value;
+    const { status, data } = await doFetch(`${BASE}/${id}`, { headers: headers() });
+    renderResponse('res-getOne', status, data);
+  }
+
+  async function createIncident() {
+    const body = {
+      title:            document.getElementById('cTitle').value,
+      description:      document.getElementById('cDescription').value,
+      reporter:         document.getElementById('cReporter').value,
+      location:         document.getElementById('cLocation').value,
+      priority:         document.getElementById('cPriority').value,
+      estimatedMinutes: Number(document.getElementById('cMinutes').value),
+    };
+    const { status, data } = await doFetch(BASE, {
+      method: 'POST', headers: headers(true), body: JSON.stringify(body)
+    });
+    renderResponse('res-create', status, data);
+  }
+
+  async function updateIncident() {
+    const id = document.getElementById('uId').value;
+    const assigned = document.getElementById('uAssigned').value;
+    const body = {
+      title:            document.getElementById('uTitle').value,
+      description:      document.getElementById('uDescription').value,
+      reporter:         document.getElementById('uReporter').value,
+      location:         document.getElementById('uLocation').value,
+      priority:         document.getElementById('uPriority').value,
+      estimatedMinutes: Number(document.getElementById('uMinutes').value),
+      ...(assigned ? { assignedTo: assigned } : {})
+    };
+    const { status, data } = await doFetch(`${BASE}/${id}`, {
+      method: 'PUT', headers: headers(true), body: JSON.stringify(body)
+    });
+    renderResponse('res-update', status, data);
+  }
+
+  async function patchStatus() {
+    const id     = document.getElementById('sId').value;
+    const status = document.getElementById('sStatus').value;
+    const { status: s, data } = await doFetch(`${BASE}/${id}/status`, {
+      method: 'PATCH', headers: headers(true), body: JSON.stringify({ status })
+    });
+    renderResponse('res-status', s, data);
+  }
+
+  async function deleteIncident() {
+    const id = document.getElementById('dId').value;
+    const { status, data } = await doFetch(`${BASE}/${id}`, {
+      method: 'DELETE', headers: headers()
+    });
+    renderResponse('res-remove', status, data);
+  }
+</script>
+</body>
+</html>
